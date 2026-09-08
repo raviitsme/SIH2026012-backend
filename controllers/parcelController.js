@@ -27,15 +27,18 @@ const getParcelGeoJSON = async (req, res) => {
     const { rows } = await pool.query(query);
 
     // Safety fallback for empty features
-    const geojson = rows[0]?.geojson || { type: 'FeatureCollection', features: [] };
+    const geojson = rows[0]?.geojson || {
+      type: "FeatureCollection",
+      features: [],
+    };
 
     res.status(200).json(geojson);
   } catch (err) {
     // VS Code Terminal par Exact Error log print hoga
-    console.error('❌ SPATIAL QUERY FAILED:', err.stack || err.message);
-    res.status(500).json({ 
-      error: 'Internal server spatial query error', 
-      details: err.message 
+    console.error("❌ SPATIAL QUERY FAILED:", err.stack || err.message);
+    res.status(500).json({
+      error: "Internal server spatial query error",
+      details: err.message,
     });
   }
 };
@@ -96,12 +99,10 @@ const createAdminTask = async (req, res) => {
         }
       } catch (err) {
         console.error("❌ SPATIAL QUERY ERROR:", err.stack || err);
-        res
-          .status(500)
-          .json({
-            error: "Internal server spatial query error",
-            message: err.message,
-          });
+        res.status(500).json({
+          error: "Internal server spatial query error",
+          message: err.message,
+        });
       }
     }
 
@@ -134,12 +135,10 @@ const createAdminTask = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ SPATIAL QUERY ERROR:", err.stack || err);
-    res
-      .status(500)
-      .json({
-        error: "Internal server spatial query error",
-        message: err.message,
-      });
+    res.status(500).json({
+      error: "Internal server spatial query error",
+      message: err.message,
+    });
   }
 };
 
@@ -195,12 +194,10 @@ const updateParcelGeometry = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ SPATIAL QUERY ERROR:", err.stack || err);
-    res
-      .status(500)
-      .json({
-        error: "Internal server spatial query error",
-        message: err.message,
-      });
+    res.status(500).json({
+      error: "Internal server spatial query error",
+      message: err.message,
+    });
   }
 };
 

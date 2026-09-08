@@ -1,30 +1,26 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+const { Pool } = require("pg");
+require("dotenv").config();
 
-// Explicit Fallback for Supabase Pooler
-const host = process.env.DB_HOST || 'aws-0-ap-south-1.pooler.supabase.com';
-const user = process.env.DB_USER || 'postgres.ncdjagphgggtydrpbxar';
-const password = process.env.DB_PASSWORD || ''; // Ensure your password is set in Render
-const database = process.env.DB_NAME || 'postgres';
-const port = Number(process.env.DB_PORT) || 6543;
+// Direct host check to disable SSL locally, enable on Render/Supabase
+const isLocal =
+  process.env.DB_HOST === "localhost" ||
+  process.env.DB_HOST === "127.0.0.1" ||
+  !process.env.DB_HOST;
 
 const pool = new Pool({
-  host,
-  port,
-  database,
-  user,
-  password,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT) || 6543,
+  database: process.env.DB_NAME || "postgres",
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl: isLocal ? false : { rejectUnauthorized: false },
 });
 
-// Initial Connection Test to print error directly on startup
 pool.connect((err, client, release) => {
   if (err) {
-    console.error('❌ DB CONNECTION FAILURE ON STARTUP:', err.message);
+    console.error("❌ RENDER DB CONNECTION ERROR:", err.message);
   } else {
-    console.log('✅ DATABASE CONNECTED SUCCESSFULLY!');
+    console.log("✅ RENDER CONNECTED TO SUPABASE POSTGIS!");
     release();
   }
 });
