@@ -6,42 +6,37 @@ const FormData = require("form-data");
 // 1. GET ALL PARCELS AS GEOJSON (Returns latest auditor comments & surveyor notes)
 const getParcelGeoJSON = async (req, res) => {
   try {
+    // Spatial GeoJSON Query with NULL and Empty table safety
     const query = `
-        SELECT jsonb_build_object(
-          'type', 'FeatureCollection',
-          'features', COALESCE(
-            jsonb_agg(
-              jsonb_build_object(
-                'type', 'Feature',
-                'geometry', ST_AsGeoJSON(ST_Transform(geom, 4326))::jsonb,
-                'properties', jsonb_build_object(
-                  'id', id,
-                  'parcel_id', parcel_id,
-                  'owner_name', owner_name,
-                  'land_use', land_use,
-                  'status', status,
-                  'image_url', image_url,
-                  'surveyor_notes', surveyor_notes,
-                  'auditor_comments', auditor_comments
-                )
-              )
-            ),
-            '[]'::jsonb
-          )
-        ) AS geojson
-        FROM parcels;
-        `;
+      SELECT jsonb_build_object(
+        'type', 'FeatureCollection',
+        'features', COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'type', 'Feature',
+              'geometry', ST_AsGeoJSON(geom)::jsonb,
+              'properties', to_jsonb(p) - 'geom'
+            )
+          ) FILTER (WHERE geom IS NOT NULL),
+          '[]'::jsonb
+        )
+      ) AS geojson
+      FROM parcels p;
+    `;
 
-    const result = await pool.query(query);
-    return res.json(result.rows[0].geojson);
+    const { rows } = await pool.query(query);
+
+    // Safety fallback for empty features
+    const geojson = rows[0]?.geojson || { type: 'FeatureCollection', features: [] };
+
+    res.status(200).json(geojson);
   } catch (err) {
-    console.error("❌ SPATIAL QUERY ERROR:", err.stack || err);
-    res
-      .status(500)
-      .json({
-        error: "Internal server spatial query error",
-        message: err.message,
-      });
+    // VS Code Terminal par Exact Error log print hoga
+    console.error('❌ SPATIAL QUERY FAILED:', err.stack || err.message);
+    res.status(500).json({ 
+      error: 'Internal server spatial query error', 
+      details: err.message 
+    });
   }
 };
 
