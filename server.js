@@ -36,5 +36,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Serving the backend at http://localhost:${PORT}`);
+  console.log(`Serving the backend at https://sih2026012-backend.onrender.com/`);
 });
