@@ -34,12 +34,10 @@ const getParcelGeoJSON = async (req, res) => {
 
     const result = await pool.query(query);
     return res.json(result.rows[0].geojson);
-  } catch (e) {
-    console.error("Error fetching spatial GeoJSON : ", e);
-    return res
-      .status(500)
-      .json({ error: "Internal server spatial query error" });
-  }
+  } catch (err) {
+  console.error('❌ SPATIAL QUERY ERROR:', err.stack || err);
+  res.status(500).json({ error: "Internal server spatial query error", message: err.message });
+}
 };
 
 // 2. ADMIN: Create Parcel & Upload Satellite/Drone Reference Image
@@ -88,10 +86,10 @@ const createAdminTask = async (req, res) => {
           targetGeometry = aiResponse.data.geometry;
           console.log("AI Auto-Boundary Extraction Successful!");
         }
-      } catch (aiError) {
-        console.warn("AI Microservice Error:", aiError.response?.data || aiError.message);
-        console.warn("Falling back to default geometry...");
-      }
+      } catch (err) {
+  console.error('❌ SPATIAL QUERY ERROR:', err.stack || err);
+  res.status(500).json({ error: "Internal server spatial query error", message: err.message });
+}
     }
 
     const query = `
@@ -121,10 +119,10 @@ const createAdminTask = async (req, res) => {
       message: "Task created with AI Boundary extraction successfully!",
       parcel: result.rows[0]
     });
-  } catch (e) {
-    console.error("Failed to create admin task : ", e);
-    return res.status(500).json({ error: "Failed to create parcel task." });
-  }
+  } catch (err) {
+  console.error('❌ SPATIAL QUERY ERROR:', err.stack || err);
+  res.status(500).json({ error: "Internal server spatial query error", message: err.message });
+}
 };
 
 // 3. SURVEYOR: Resubmit / Update Geometry & Send back to Auditor
@@ -176,12 +174,10 @@ const updateParcelGeometry = async (req, res) => {
       message: "Parcel boundary updated & resubmitted to Auditor.",
       updatesParcel: result.rows[0],
     });
-  } catch (e) {
-    console.error("Failed to update parcel boundary : ", e);
-    return res
-      .status(500)
-      .json({ error: "Internal server spatial update error." });
-  }
+  } catch (err) {
+  console.error('❌ SPATIAL QUERY ERROR:', err.stack || err);
+  res.status(500).json({ error: "Internal server spatial query error", message: err.message });
+}
 };
 
 // 4. AUDITOR: Final Decision (Approved -> 'Approved', Rejected -> 'Pending Survey' for Surveyor fix)

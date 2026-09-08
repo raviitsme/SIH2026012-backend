@@ -1,16 +1,32 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Explicit check: Render environment mein NODE_ENV 'production' hota hai ya DB_HOST explicitly remote host hota hai
-const isProduction = process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('supabase.co');
+// Explicit Fallback for Supabase Pooler
+const host = process.env.DB_HOST || 'aws-0-ap-south-1.pooler.supabase.com';
+const user = process.env.DB_USER || 'postgres.ncdjagphgggtydrpbxar';
+const password = process.env.DB_PASSWORD || ''; // Ensure your password is set in Render
+const database = process.env.DB_NAME || 'postgres';
+const port = Number(process.env.DB_PORT) || 6543;
 
 const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  ssl: isProduction ? { rejectUnauthorized: false } : false
+  host,
+  port,
+  database,
+  user,
+  password,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Initial Connection Test to print error directly on startup
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ DB CONNECTION FAILURE ON STARTUP:', err.message);
+  } else {
+    console.log('✅ DATABASE CONNECTED SUCCESSFULLY!');
+    release();
+  }
 });
 
 module.exports = pool;
